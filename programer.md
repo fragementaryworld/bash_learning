@@ -4,33 +4,33 @@
 
 ---
 ### shell通配符
-- **\*** 匹配任意多个字符 `rm -rf *`
-- **?** 匹配一个字符 `ll l?ve`
-- **[]** 匹配括号中任意一个字符`[0-9],[a-z],[^A-Z]`
-- **()** 在子shell中执行`(umask 077;touch test.txt)`
-- **{}** 集合 `touch file{1..9}.txt`
-- **\\** 转义符
+- **\*** 匹配任意多个字符 `rm -rf *`  
+- **?** 匹配一个字符 `ll l?ve`  
+- **[]** 匹配括号中任意一个字符`[0-9],[a-z],[^A-Z]`  
+- **()** 在子shell中执行`(umask 077;touch test.txt)`  
+- **{}** 集合 `touch file{1..9}.txt`  
+- **\\** 转义符  
 > * `echo -e "a\nb"`, 让echo带有转义功能
 > * `echo -e "\e[1;31mThis is a red text.\e[0m"`echo带有颜色输出，m前表示颜色，1表示高亮，0表示透明，3X表示前景色，4X表示背景色，m后为输出文本
 
 ---
 ### shell 变量
-* **`${#var}`** 取变量长度
-* **export** 将局域变量(脚本运行shell)转变为全局变量(所有shell)`export PATH=$PATH:/usr/bin`
-* **unset** 取消变量
-* **env** 查看全局变量(环境变量)
+* **`${#var}`** 取变量长度  
+* **export** 将局域变量(脚本运行shell)转变为全局变量(所有shell)`export PATH=$PATH:/usr/bin`  
+* **unset** 取消变量  
+* **env** 查看全局变量(环境变量)  
 > * `./test.sh` or `bash test.sh` 在子shell中执行
 > * `. test.sh` or `source test.sh` 在当前shell中执行
 
 * **位置变量**：`$1 $2 $3 ... ${10}`
 * **预定义变量**
-> `$0` 脚本名
-> `$*` 所有参数
-> `$@` 所有参数，与`$*`的区别在于`$@`的参数是分割开来的，`￥*`的所有参数是一体的，这在`for`语句中将会体现
-> `$#` 参数的个数
-> `$$` 当前进程的PID
-> `$!` 上一个后台进程的PID
-> `$?` 上一个命令的返回值
+> `$0` 脚本名   
+> `$*` 所有参数  
+> `$@` 所有参数，与`$*`的区别在于`$@`的参数是分割开来的，`$*`的所有参数是一体的，这在`for`语句中将会体现  
+> `$#` 参数的个数  
+> `$$` 当前进程的PID  
+> `$!` 上一个后台进程的PID  
+> `$?` 上一个命令的返回值  
 
 * **变量赋值** `read -p "promot" var`
 * **变量运算** 
@@ -194,4 +194,86 @@ echo "finish..."
 
 ---
 ### 数组
-* **普通数组**：
+* **普通数组**： `array=(linux bash zsh python)`，`array[0]=linux`,`echo ${array[0]}`
+* **关联数组** ： `declare -A array=([name]=Jack [age]=22 [sex]=male)`,`declare -A array;array[name]=jack`,`echo ${array[name]}`
+> * `echo ${array[@]}` : 访问数组所有元素
+> * `echo ${#array[@]}` : 统计数组元素个数
+> * `echo ${!array[@]}` : 获取数组元素的索引
+> * `echo ${array[@]:1:2}` : 从数组下标1开始，访问两个元素
+
+```bash
+#!/bin/bash
+#count shells
+delare -A shells
+while read line
+do
+    type=`echo $line | awk -F":" {print $NF}`
+    let shells[$type]++
+done < /etc/passwd
+for i in ${!shells[@]}
+do
+    echo "$i:${shells[$i]}"
+done
+```
+
+---
+### 函数function
+* **定义函数** ：
+```bash
+function (){
+    ....
+}
+```
+
+* **调用函数** :
+`function argv1 argv2 ...`
+
+* **函数返回值**
+
+```bash
+function(){
+    ...
+    return 0
+}
+function
+echo "function return $?"
+```
+
+以上函数的返回值为函数的返回码只能在`0~255`之间，可用另一种方式替代
+```bash
+function(){
+    ...
+    echo 0
+}
+result=`function`
+echo "function return $result"
+```
+* **位置参数** ：函数的位置参数与脚本的位置参数一致
+
+```bash
+#!/bin/bash
+num=(1 2 3 4)
+array(){
+    factorial=1
+    for i in $@
+    do
+        factorial=$(($factorial*$i))
+    done
+    echo $factorial
+}
+array ${num[@]}
+```
+
+* **shift** : 让位置参数左移
+
+```bash
+#!/bin/bash
+while [ $# -ne 0 ]
+do
+    let sum+=$1
+    shift
+done
+echo "sum:$sum"
+```
+` ./sum.sh 1 2 3 4`
+
